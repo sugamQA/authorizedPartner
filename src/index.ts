@@ -141,10 +141,28 @@ async function signup() {
   }
 
   const fileInputs = page.locator('input[type="file"]');
-  if ((await fileInputs.count()) > 0) {
-    await fileInputs.nth(0).setInputFiles("C:\\Users\\DELL\\Desktop\\test.docx");
-    console.log("  Uploaded test.docx");
-    await page.waitForTimeout(1000);
+  let fileCount = await fileInputs.count();
+  console.log(`  Found ${fileCount} file inputs`);
+
+  for (let i = 0; i < fileCount; i++) {
+    const accept = await fileInputs.nth(i).getAttribute("accept").catch(() => null);
+    console.log(`  Input ${i} accept="${accept}"`);
+    // Remove accept restriction so any file type can be uploaded
+    await page.evaluate((idx: number) => {
+      const inputs = document.querySelectorAll('input[type="file"]');
+      if (inputs[idx]) inputs[idx].removeAttribute("accept");
+    }, i);
+  }
+
+  if (fileCount > 0) {
+    await fileInputs.nth(0).setInputFiles("test-assets\\test.pdf");
+    console.log("  Uploaded test.pdf to input 0");
+    await page.waitForTimeout(500);
+  }
+  if (fileCount > 1) {
+    await fileInputs.nth(1).setInputFiles("test-assets\\test.docx");
+    console.log("  Uploaded test.docx to input 1");
+    await page.waitForTimeout(500);
   }
 
   for (const inst of ["Universities", "Colleges"]) { await checkCheckbox(page, inst); await page.waitForTimeout(200); }
@@ -165,17 +183,36 @@ async function signup() {
 async function login(email: string, password: string) {
   const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
-  page.setDefaultTimeout(15000);
+  page.setDefaultTimeout(30000);
 
   console.log("\n=== LOGIN ===");
   console.log("  Email:", email);
-  await page.goto("https://authorized-partner.vercel.app/login", { waitUntil: "networkidle" });
+  await page.goto("https://authorized-partner.vercel.app/login", { waitUntil: "networkidle", timeout: 60000 });
   await page.waitForTimeout(2000);
 
-  await page.locator('input[type="email"]').first().fill(email);
-  await page.locator('input[type="password"]').first().fill(password);
-  await page.locator('button[type="submit"]').first().click();
-  await page.waitForTimeout(5000);
+  // If already on the dashboard (auto-login after signup), skip filling
+  if (!page.url().includes("login") && !page.url().includes("register")) {
+    console.log("  Already logged in (redirected to dashboard)");
+  } else {
+    const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+    const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+
+    if (await emailInput.isVisible().catch(() => false)) {
+      await emailInput.fill(email);
+    }
+    if (await passwordInput.isVisible().catch(() => false)) {
+      await passwordInput.fill(password);
+    }
+
+    const loginBtn = page.locator('button[type="submit"]').first();
+    if (await loginBtn.isVisible().catch(() => false)) {
+      await loginBtn.click();
+      console.log("  Submitted login form");
+    }
+
+    await page.waitForURL("**/dashboard**", { timeout: 30000 }).catch(() => {});
+    await page.waitForTimeout(2000);
+  }
 
   const url = page.url();
   const text = await page.locator("body").innerText();

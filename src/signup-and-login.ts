@@ -158,7 +158,7 @@ async function clickDropdownOption(page: any, optionText: string) {
   const fileCount = await fileInputs.count();
   console.log(`  Found ${fileCount} file inputs`);
   if (fileCount > 0) {
-    await fileInputs.nth(0).setInputFiles("C:\\Users\\DELL\\Desktop\\test.docx");
+    await fileInputs.nth(0).setInputFiles("test-assets\\test.docx");
     console.log("  Uploaded test.docx");
     await page.waitForTimeout(1000);
   }

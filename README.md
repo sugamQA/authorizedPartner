@@ -14,7 +14,7 @@ npm install
 npx playwright install chromium
 ```
 
-Make sure `C:\Users\DELL\Desktop\test.docx` exists for document upload (or change the path in `src/index.ts`).
+Make sure `test.docx` exists in the `test-assets/` folder for document upload, or change the path in `src/index.ts`.
 
 ## Usage
 
@@ -47,9 +47,14 @@ If `credentials.json` exists, it skips signup and logs in directly.
 
 ```
 ├── src/
-│   ├── index.ts          # Main automation script
-│   └── login.ts          # Standalone login script
-├── credentials.json      # Saved credentials (auto-generated)
+│   ├── index.ts                  # Main automation script (signup + login)
+│   ├── login.ts                  # Standalone login script
+│   └── signup-and-login.ts       # Combined signup & login flow
+├── test-assets/
+│   ├── DEMO.mp4                  # Demo video for upload
+│   ├── test.docx                 # Word document for upload
+│   └── test.pdf                  # PDF document for upload
+├── credentials.json              # Saved credentials (auto-generated)
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -60,4 +65,4 @@ If `credentials.json` exists, it skips signup and logs in directly.
 - OTP is auto-retrieved via mail.tm API
 - Uses Playwright with visible browser (`headless: false`)
 - Default password: `TestPass123!`
-- Documents uploaded from `C:\Users\DELL\Desktop\test.docx`
+- Documents uploaded from `test-assets/test.docx`
